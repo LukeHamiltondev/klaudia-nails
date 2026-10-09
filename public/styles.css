@@ -91,6 +91,7 @@ h1, h2, p { margin: 0; }
 .book .muted { font-size: 15px; }
 
 .booking { display: grid; gap: 0; }
+.notice { border-left: 3px solid var(--wine); padding: 4px 0 4px 14px; margin-bottom: 20px; }
 .step { border: 0; border-top: 1px solid var(--rule); margin: 0; padding: 20px 0 26px; min-width: 0; transition: opacity .2s; }
 .step:last-child { border-bottom: 1px solid var(--rule); }
 .step:disabled { opacity: .38; }

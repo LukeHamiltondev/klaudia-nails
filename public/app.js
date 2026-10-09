@@ -106,11 +106,24 @@ function renderTimes() {
     <button type="button" class="time" aria-pressed="${t === state.time}" data-time="${t}">${fmtTime(t)}</button>`).join("")}</div>`;
 }
 
+const euro = (n) => `€${Number.isInteger(n) ? n : n.toFixed(2)}`;
+const confirmLabel = () => (state.salon?.deposit ? `Pay ${euro(state.salon.deposit.amount)} deposit` : "Confirm booking");
+
 function updateSummary() {
   const s = state.service;
+  const deposit = state.salon?.deposit;
   $("#summary").textContent = s && state.date && state.time
-    ? `${s.name} on ${fmtDay(state.date, { weekday: "long", day: "numeric", month: "long" })} at ${fmtTime(state.time)}, ${s.price}.`
+    ? `${s.name} on ${fmtDay(state.date, { weekday: "long", day: "numeric", month: "long" })} at ${fmtTime(state.time)}, ${s.price}.` +
+      (deposit ? ` A ${euro(deposit.amount)} deposit holds your time; the rest is paid in the studio.` : "")
     : "";
+}
+
+function showBooked(data) {
+  $("#booking").hidden = true;
+  const paid = data.deposit?.paid ? ` ${euro(data.deposit.amount)} deposit paid, the rest in the studio.` : "";
+  $("#booked-text").textContent = `${data.service} on ${data.day} at ${data.time}, ${data.price}.${paid} Your reference is ${data.reference}.`;
+  $("#booked").hidden = false;
+  $("#booked").focus();
 }
 
 async function submit(e) {
@@ -141,21 +154,51 @@ async function submit(e) {
       if (res.status === 400 && /no longer free/.test(data.error || "")) loadTimes();
       return;
     }
-    form.hidden = true;
-    $("#booked-text").textContent = `${data.service} on ${data.day} at ${data.time}, ${data.price}. Your reference is ${data.reference}.`;
-    $("#booked").hidden = false;
-    $("#booked").focus();
+    if (data.checkoutUrl) {
+      btn.textContent = "Opening payment…";
+      location.href = data.checkoutUrl;
+      return new Promise(() => {}); // keep the button disabled while the page changes
+    }
+    showBooked(data);
   } catch {
     err.textContent = "That booking didn't go through. Check your connection and try again.";
   } finally {
     btn.disabled = false;
-    btn.textContent = "Confirm booking";
+    btn.textContent = confirmLabel();
+  }
+}
+
+// Coming back from Stripe's payment page.
+async function handleReturn() {
+  const q = new URLSearchParams(location.search);
+  const session = q.get("paid"), unpaid = q.get("unpaid");
+  if (!session && !unpaid) return;
+  history.replaceState(null, "", location.pathname + "#book");
+  if (unpaid) {
+    await fetch(`/api/bookings/${encodeURIComponent(unpaid)}/release`, { method: "POST" }).catch(() => {});
+    $("#notice").textContent = "No payment was taken and that time has been freed. Pick a time again whenever you're ready.";
+    $("#notice").hidden = false;
+    return;
+  }
+  try {
+    const res = await fetch(`/api/bookings/paid?session=${encodeURIComponent(session)}`);
+    const data = await res.json();
+    if (res.ok && data.status === "confirmed") return showBooked(data);
+    $("#notice").hidden = false;
+    $("#notice").textContent = res.ok
+      ? "Your payment is still going through. You'll be booked once it clears; message me on Instagram if you're unsure."
+      : data.error || "Couldn't check your payment. Message me on Instagram with the time you picked.";
+  } catch {
+    $("#notice").hidden = false;
+    $("#notice").textContent = "Couldn't check your payment. Message me on Instagram with the time you picked.";
   }
 }
 
 try {
   state.salon = await (await fetch("/api/salon")).json();
   renderBooking(state.salon);
+  $("#confirm").textContent = confirmLabel();
+  await handleReturn();
 } catch {
   $("#service-choices").innerHTML = `<p class="form-error">Online booking couldn't load. Refresh the page, or message me on Instagram.</p>`;
 }
