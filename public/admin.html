@@ -83,14 +83,16 @@
       $("#login").hidden = true; $("#diary").hidden = false; $("#logout").hidden = false;
 
       const byDay = {};
-      for (const b of bookings) (byDay[b.date] ??= []).push(b);
+      for (const b of bookings.filter((b) => b.status !== "expired")) (byDay[b.date] ??= []).push(b);
+      const depositNote = (b) => b.status === "pending" ? " · <em>waiting for deposit</em>"
+        : b.deposit?.paid ? ` · €${b.deposit.amount} deposit paid${b.paidAfterHold ? " (after the hold ran out, check for a clash)" : ""}` : "";
       $("#bookings").innerHTML = Object.keys(byDay).length ? Object.entries(byDay).map(([d, list]) => `
         <div class="day-group"><h3>${fmtDay(d)}</h3>${list.map((b) => `
           <div class="appt ${b.status}">
             <span class="t">${b.start}</span>
             <div><strong>${esc(b.name)}</strong>, ${esc(b.serviceName)} (${esc(b.price)})
-              <small><a href="tel:${esc(b.phone)}">${esc(b.phone)}</a>${b.notes ? `. ${esc(b.notes)}` : ""} · until ${b.end} · Ref ${b.id}</small></div>
-            ${b.status === "confirmed" ? `<button class="linkbtn" type="button" data-cancel="${b.id}">Cancel</button>` : "<span class='muted'>Cancelled</span>"}
+              <small><a href="tel:${esc(b.phone)}">${esc(b.phone)}</a>${b.notes ? `. ${esc(b.notes)}` : ""} · until ${b.end}${depositNote(b)} · Ref ${b.id}</small></div>
+            ${b.status === "pending" ? "<span class='muted'>Held</span>" : b.status === "confirmed" ? `<button class="linkbtn" type="button" data-cancel="${b.id}">Cancel</button>` : "<span class='muted'>Cancelled</span>"}
           </div>`).join("")}</div>`).join("") : `<p class="muted">No bookings yet. They'll appear here as soon as someone books on the site.</p>`;
 
       $("#blocks").innerHTML = blocks.map((b) => `<div class="appt"><span class="t">${b.start}</span><div><strong>${fmtDay(b.date)}</strong> until ${b.end}<small>${esc(b.reason)}</small></div><button class="linkbtn" type="button" data-unblock="${b.id}">Remove</button></div>`).join("");
@@ -107,7 +109,7 @@
     document.addEventListener("click", async (e) => {
       const c = e.target.dataset?.cancel, u = e.target.dataset?.unblock;
       if (c) {
-        if (!confirm("Cancel this booking? Let the client know yourself; the site doesn't message them.")) return;
+        if (!confirm("Cancel this booking? Let the client know yourself, and refund any deposit from your Stripe dashboard.")) return;
         await api(`/api/admin/bookings/${c}/cancel`, { method: "POST" });
         load();
       }

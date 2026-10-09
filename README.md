@@ -10,6 +10,7 @@ Website and online booking for Nails by Klaudia Kociubinska ([@klaudiakanails](h
 
 - **Page** (`public/index.html`, `public/styles.css`): one HTML template, filled in on the server from `config/salon.json`, so prices and details are in the page itself (good for Google and link previews).
 - **Booking** (`public/app.js`, `src/bookings.js`, `src/store.js`): pick a treatment, a day, a free time and add a name and mobile. One diary, so no double booking. Stored in `data/bookings.json`.
+- **Deposit** (`src/stripe.js`): with Stripe set up, booking ends on Stripe's own payment page for a €10 deposit (`deposit` in `config/salon.json`). The time is held for 35 minutes while the client pays and confirmed as soon as Stripe says it's paid, either on the way back to the site or by Stripe's webhook, whichever comes first. If the client backs out, the time is freed. Without Stripe keys, bookings confirm straight away as before.
 - **Klaudia's diary** (`/admin`, "Sign in" in the footer): password sign-in, upcoming bookings, cancel, block out breaks or days off. The site sends no texts or emails, so she lets clients know about a cancellation herself.
 - **Look**: off-white paper, black heavy lowercase headings in Inter Tight, mono labels in JetBrains Mono and a burgundy scribble, taken from the logo and the 09/26 Instagram price list.
 
@@ -18,7 +19,7 @@ Website and online booking for Nails by Klaudia Kociubinska ([@klaudiakanails](h
 ```bash
 cp .env.example .env   # optional
 npm start              # http://localhost:3000, diary at http://localhost:3000/admin
-npm test               # 13 tests: diary rules, booking API, sign-in, page content
+npm test               # 21 tests: diary rules, booking API, deposit flow with a fake Stripe, sign-in, page content
 ```
 
 ## Change prices, hours or details
@@ -37,6 +38,16 @@ The six photos are in `public/images/gallery/` as `1.jpg` to `6.jpg`, each with 
 2. **Add a volume** to the service (right-click the service, or the command palette) and mount it at `/data`. Bookings are saved there; without a volume they're wiped on every deploy.
 3. Under **Variables**, add `ADMIN_PASSWORD`. The diary stays locked without it.
 4. Under **Settings > Networking**, generate a domain.
+5. For the deposit, add `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` (see below).
+
+### Stripe deposit
+
+1. Klaudia creates a Stripe account (stripe.com, Ireland, her bank details for payouts).
+2. In Stripe, **Developers > API keys**: copy the secret key into `STRIPE_SECRET_KEY`. Use the `sk_test_` key first to try it with Stripe's test card `4242 4242 4242 4242`, then swap in the `sk_live_` key.
+3. **Developers > Webhooks > Add endpoint**: `https://YOUR-DOMAIN/stripe/webhook`, events `checkout.session.completed`, `checkout.session.async_payment_succeeded` and `checkout.session.expired`. Copy its signing secret into `STRIPE_WEBHOOK_SECRET`. The webhook catches clients who pay and close the tab before coming back.
+4. Change the amount in `config/salon.json` (`"deposit": { "amount": 10 }`), or set it to 0 to switch the deposit off.
+
+Refunds (for a cancellation) are done from the payment in the Stripe dashboard.
 
 `DATA_DIR` and `PUBLIC_URL` pick up the volume and the Railway domain on their own, so only set them to override. Any other host that runs Node 20+ with a persistent disk works too; set `DATA_DIR` to the disk's path there.
 

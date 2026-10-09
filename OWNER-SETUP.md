@@ -16,3 +16,5 @@ On Railway:
 - [ ] A volume attached to the service (mounted at `/data`), so bookings survive deploys
 - [ ] `ADMIN_PASSWORD`: a long password for her diary at `/admin`
 - [ ] `PUBLIC_URL`: only once she has her own domain; until then the Railway domain is used
+- [ ] `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` from Klaudia's Stripe account (README, "Stripe deposit"). Try the test keys first.
+- [ ] Deposit amount (`deposit` in `config/salon.json`, now €10), and whether it's refundable; say so in the booking note

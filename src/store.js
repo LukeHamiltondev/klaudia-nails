@@ -19,8 +19,9 @@ export class Store {
     fs.renameSync(tmp, this.file);
   }
 
-  activeBookingsOn(date) {
-    return this.data.bookings.filter((b) => b.date === date && b.status === "confirmed");
+  // Confirmed bookings, plus ones still held while the client pays the deposit.
+  activeBookingsOn(date, nowIso = new Date().toISOString()) {
+    return this.data.bookings.filter((b) => b.date === date && (b.status === "confirmed" || (b.status === "pending" && b.holdUntil > nowIso)));
   }
 
   blocksOn(date) {
@@ -41,6 +42,30 @@ export class Store {
 
   getBooking(id) {
     return this.data.bookings.find((b) => b.id === id);
+  }
+
+  // Marks a held booking as paid. Safe to call twice (redirect and webhook both do).
+  confirmDeposit(id, payment) {
+    const b = this.getBooking(id);
+    if (!b) return null;
+    // A payment that lands after its hold was released still counts; flag it so Klaudia checks for a clash.
+    if (b.status === "pending" || b.status === "expired") {
+      if (b.status === "expired") b.paidAfterHold = true;
+      b.status = "confirmed";
+      b.deposit = { ...b.deposit, paid: true, paidAt: new Date().toISOString(), ...payment };
+      delete b.holdUntil;
+      this.save();
+    }
+    return b;
+  }
+
+  // Frees a slot the client didn't pay for.
+  releaseHold(id) {
+    const b = this.getBooking(id);
+    if (!b || b.status !== "pending") return null;
+    b.status = "expired";
+    this.save();
+    return b;
   }
 
   cancelBooking(id, by) {

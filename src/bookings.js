@@ -39,7 +39,7 @@ export class BookingService {
 
   isFree(date, start, end) {
     const clash = (s, e) => start < e && s < end;
-    for (const b of this.store.activeBookingsOn(date)) {
+    for (const b of this.store.activeBookingsOn(date, this.clock().toISOString())) {
       if (clash(toMinutes(b.start), toMinutes(b.end))) return false;
     }
     for (const bl of this.store.blocksOn(date)) {
@@ -65,7 +65,8 @@ export class BookingService {
     return { date, times, closedReason: times.length ? null : "Fully booked that day." };
   }
 
-  book({ serviceId, date, time, name, phone, notes = "", source }) {
+  // With a deposit, the booking starts "pending" and holds its slot until holdUntil.
+  book({ serviceId, date, time, name, phone, notes = "", source, deposit = null, holdMinutes = 30 }) {
     name = String(name || "").trim().slice(0, 80);
     if (!name) throw new BookingError("A name is needed for the booking.");
     if (!isPlausiblePhone(phone)) throw new BookingError("That phone number doesn't look right.");
@@ -85,6 +86,11 @@ export class BookingService {
       phone: normalisePhone(phone),
       notes: String(notes).slice(0, 300),
       source,
+      ...(deposit && {
+        status: "pending",
+        holdUntil: new Date(this.clock().getTime() + holdMinutes * 60_000).toISOString(),
+        deposit: { amount: deposit.amount, currency: deposit.currency, paid: false },
+      }),
     });
   }
 }
