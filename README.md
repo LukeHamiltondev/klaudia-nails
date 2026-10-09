@@ -29,9 +29,16 @@ Edit `config/salon.json`. The page and the booking form read it on every load, s
 
 The six photos are in `public/images/gallery/` as `1.jpg` to `6.jpg`, each with alt text in the `gallery` list in `config/salon.json`. To add one, drop the file in and add a line there. The hero photo is `3.jpg`. The K mark in `public/brand/k-mark.png` is cut from the logo; a vector version from the designer would be sharper.
 
-## Deploy
+## Deploy (Railway)
 
-Any host that runs Node 20+ and keeps a persistent disk works. `render.yaml` sets it up on Render with a small disk for the diary (the free plan has no disk, so bookings would vanish on each deploy). Set `ADMIN_PASSWORD` and `PUBLIC_URL` in the host's dashboard.
+`railway.json` sets the start command and health check. In Railway:
+
+1. **New project > Deploy from GitHub repo** and pick `klaudia-nails`.
+2. **Add a volume** to the service (right-click the service, or the command palette) and mount it at `/data`. Bookings are saved there; without a volume they're wiped on every deploy.
+3. Under **Variables**, add `ADMIN_PASSWORD`. The diary stays locked without it.
+4. Under **Settings > Networking**, generate a domain.
+
+`DATA_DIR` and `PUBLIC_URL` pick up the volume and the Railway domain on their own, so only set them to override. Any other host that runs Node 20+ with a persistent disk works too; set `DATA_DIR` to the disk's path there.
 
 ## Security notes
 

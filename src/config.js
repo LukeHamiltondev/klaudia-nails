@@ -18,9 +18,10 @@ const env = process.env;
 export const config = {
   root,
   port: Number(env.PORT || 3000),
-  publicUrl: (env.PUBLIC_URL || `http://localhost:${env.PORT || 3000}`).replace(/\/$/, ""),
+  // On Railway, PUBLIC_URL and DATA_DIR fall back to the service's domain and attached volume.
+  publicUrl: (env.PUBLIC_URL || (env.RAILWAY_PUBLIC_DOMAIN ? `https://${env.RAILWAY_PUBLIC_DOMAIN}` : `http://localhost:${env.PORT || 3000}`)).replace(/\/$/, ""),
   adminPassword: env.ADMIN_PASSWORD || "",
-  dataDir: path.resolve(root, env.DATA_DIR || "data"),
+  dataDir: path.resolve(root, env.DATA_DIR || env.RAILWAY_VOLUME_MOUNT_PATH || "data"),
   salonFile: path.resolve(root, env.SALON_CONFIG || "config/salon.json"),
 };
 

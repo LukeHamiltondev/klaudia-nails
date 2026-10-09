@@ -11,8 +11,8 @@ Fill these in `config/salon.json`. Until then the site shows them as "to confirm
 - [ ] `email`: optional
 - [ ] `bookingNote`, `tagline` and each service's `description`: check they say what she'd say
 
-On the host:
+On Railway:
 
+- [ ] A volume attached to the service (mounted at `/data`), so bookings survive deploys
 - [ ] `ADMIN_PASSWORD`: a long password for her diary at `/admin`
-- [ ] `PUBLIC_URL`: the live address, once there's a domain
-- [ ] A persistent disk for `DATA_DIR` (`render.yaml` sets one up)
+- [ ] `PUBLIC_URL`: only once she has her own domain; until then the Railway domain is used
