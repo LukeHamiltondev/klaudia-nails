@@ -2,7 +2,11 @@
 const $ = (s, el = document) => el.querySelector(s);
 const DAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
-const state = { salon: null, service: null, date: null, time: null };
+const state = { salon: null, service: null, date: null, time: null, times: [], period: null };
+
+// Free times are shown one part of the day at a time so the list stays short.
+const PERIODS = [["morning", "Morning", 0, 12 * 60], ["afternoon", "Afternoon", 12 * 60, 17 * 60], ["evening", "Evening", 17 * 60, 24 * 60]];
+const toMins = (hhmm) => { const [h, m] = hhmm.split(":").map(Number); return h * 60 + m; };
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const addDays = (date, n) => { const d = new Date(`${date}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
@@ -48,9 +52,14 @@ function renderBooking(salon) {
   });
 
   $("#time-choices").addEventListener("click", (e) => {
+    const tab = e.target.closest(".period");
+    if (tab) {
+      state.period = tab.dataset.period;
+      return renderTimes();
+    }
     const btn = e.target.closest(".time");
     if (!btn) return;
-    pressed($("#time-choices"), btn);
+    pressed($(".time-list"), btn);
     state.time = btn.dataset.time;
     $("#step-details").disabled = false;
     updateSummary();
@@ -73,12 +82,28 @@ async function loadTimes() {
   try {
     const res = await fetch(`/api/availability?${q}`);
     const data = await res.json();
-    box.innerHTML = data.times?.length
-      ? data.times.map((t) => `<button type="button" class="time" aria-pressed="false" data-time="${t}">${fmtTime(t)}</button>`).join("")
-      : `<p class="muted">${esc(data.closedReason || data.error || "No free times that day.")} Try another day.</p>`;
+    if (!data.times?.length) {
+      box.innerHTML = `<p class="muted">${esc(data.closedReason || data.error || "No free times that day.")} Try another day.</p>`;
+      return;
+    }
+    state.times = data.times;
+    state.period = PERIODS.find(([id, , from, to]) => data.times.some((t) => toMins(t) >= from && toMins(t) < to))[0];
+    renderTimes();
   } catch {
     box.innerHTML = `<p class="form-error">Couldn't load times. Check your connection and pick the day again.</p>`;
   }
+}
+
+function renderTimes() {
+  const inPeriod = ([, , from, to]) => state.times.filter((t) => toMins(t) >= from && toMins(t) < to);
+  const periods = PERIODS.filter((p) => inPeriod(p).length);
+  const current = periods.find(([id]) => id === state.period) || periods[0];
+  const tabs = periods.length > 1
+    ? `<div class="periods" role="group" aria-label="Part of the day">${periods.map((p) => `
+        <button type="button" class="period" data-period="${p[0]}" aria-pressed="${p === current}">${p[1]} <span>${inPeriod(p).length}</span></button>`).join("")}</div>`
+    : "";
+  $("#time-choices").innerHTML = tabs + `<div class="time-list">${inPeriod(current).map((t) => `
+    <button type="button" class="time" aria-pressed="${t === state.time}" data-time="${t}">${fmtTime(t)}</button>`).join("")}</div>`;
 }
 
 function updateSummary() {

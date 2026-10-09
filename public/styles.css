@@ -110,7 +110,13 @@ h1, h2, p { margin: 0; }
 .day small { font: 400 11px var(--mono); text-transform: uppercase; letter-spacing: .04em; }
 .day b { font-size: 22px; font-weight: 800; letter-spacing: -.03em; }
 .day:disabled { border-color: var(--rule); color: var(--rule); cursor: not-allowed; }
-.times { display: flex; flex-wrap: wrap; gap: 8px; }
+.times { display: grid; gap: 14px; }
+.time-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.periods { display: flex; flex-wrap: wrap; gap: 20px; border-bottom: 1px solid var(--rule); }
+.period { font: 500 13px var(--mono); text-transform: uppercase; letter-spacing: .04em; color: var(--ink-2); background: none; border: 0; border-bottom: 2px solid transparent; padding: 0 0 10px; margin-bottom: -1px; cursor: pointer; }
+.period span { color: var(--wine); margin-left: 4px; }
+.period[aria-pressed="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+.period:hover { color: var(--ink); }
 .time { font: 400 14px var(--mono); padding: 10px 14px; font-variant-numeric: tabular-nums; }
 .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
 .fields label { display: grid; gap: 6px; font-size: 15px; font-weight: 500; }

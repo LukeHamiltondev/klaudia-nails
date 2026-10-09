@@ -11,7 +11,7 @@
   "phoneDisplay": "PLACEHOLDER phone number",
   "email": "",
   "timezone": "Europe/Dublin",
-  "slotIntervalMinutes": 15,
+  "slotIntervalMinutes": 30,
   "minNoticeMinutes": 120,
   "maxDaysAhead": 42,
   "hours": {
