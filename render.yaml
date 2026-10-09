@@ -1,13 +1,20 @@
 # One-click deploy on Render (render.com): New > Blueprint > pick this repo.
-# No database or disk: everything lives in config/salon.json, so the free plan is enough.
 services:
   - type: web
     name: klaudia-nails
     runtime: node
-    plan: free
+    plan: starter            # a paid plan is needed for the disk that keeps the diary
     buildCommand: npm ci --omit=dev || npm install --omit=dev
     startCommand: npm start
     healthCheckPath: /api/salon
+    disk:
+      name: diary
+      mountPath: /var/data
+      sizeGB: 1
     envVars:
+      - key: DATA_DIR
+        value: /var/data
       - key: PUBLIC_URL
+        sync: false
+      - key: ADMIN_PASSWORD
         sync: false

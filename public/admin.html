@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en-IE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Klaudia's Diary</title>
+  <link rel="icon" href="favicon.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .admin { padding-block: 40px 96px; }
+    .admin h2 { font-size: clamp(48px, 8vw, 96px); margin: 56px 0 20px; }
+    .admin h2:first-child { margin-top: 0; }
+    .login { max-width: 380px; display: grid; gap: 14px; }
+    .login label, .block-form label { display: grid; gap: 6px; font-size: 15px; font-weight: 500; }
+    .login input, .block-form input { font: inherit; font-weight: 400; padding: 12px; border: 1px solid var(--ink); border-radius: 0; background: #fff; color: var(--ink); }
+    .day-group h3 { font: 500 13px var(--mono); text-transform: uppercase; letter-spacing: .04em; margin: 28px 0 0; padding-bottom: 8px; border-bottom: 1px solid var(--ink); }
+    .appt { display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; gap: 12px; align-items: baseline; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+    .appt.cancelled { opacity: .45; text-decoration: line-through; }
+    .appt .t { font: 500 15px var(--mono); font-variant-numeric: tabular-nums; }
+    .appt small { color: var(--ink-2); display: block; margin-top: 2px; }
+    .linkbtn { background: none; border: 0; padding: 0; color: var(--wine); font: 500 13px var(--mono); text-transform: uppercase; letter-spacing: .04em; cursor: pointer; text-decoration: underline; text-underline-offset: 4px; }
+    .block-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin-bottom: 8px; }
+    .bar .linkbtn { color: var(--ink); }
+  </style>
+</head>
+<body>
+  <header class="bar">
+    <a class="bar-mark" href="/" aria-label="Back to the site"><img src="brand/k-mark.png" alt="" width="435" height="415"></a>
+    <nav aria-label="Diary"><a href="/">View site</a><button class="linkbtn" id="logout" type="button" hidden>Sign out</button></nav>
+  </header>
+  <main class="wrap admin">
+    <form class="login" id="login">
+      <h2 class="display">sign in.</h2>
+      <label for="pw">Password <input id="pw" type="password" name="pw" autocomplete="current-password" required></label>
+      <button class="btn btn-dark" type="submit">Open the diary</button>
+      <p class="form-error" id="login-error" role="alert"></p>
+    </form>
+
+    <div id="diary" hidden>
+      <h2 class="display">bookings.</h2>
+      <div id="bookings"></div>
+
+      <h2 class="display">time off.</h2>
+      <p class="muted" style="margin-bottom:16px">Blocked times can't be booked online.</p>
+      <form class="block-form" id="block-form">
+        <label for="b-date">Date <input id="b-date" type="date" name="date" required></label>
+        <label for="b-start">From <input id="b-start" type="time" name="start" value="13:00" required></label>
+        <label for="b-end">To <input id="b-end" type="time" name="end" value="14:00" required></label>
+        <label for="b-reason">Reason <input id="b-reason" name="reason" placeholder="Lunch"></label>
+        <button class="btn btn-dark" type="submit">Block time</button>
+      </form>
+      <p class="form-error" id="block-error" role="alert"></p>
+      <div id="blocks"></div>
+    </div>
+  </main>
+  <script type="module">
+    const $ = (s) => document.querySelector(s);
+    const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+    const fmtDay = (d) => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-IE", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" });
+    let pw = "";
+    try { pw = sessionStorage.getItem("kn-pw") || ""; } catch {}
+
+    async function api(path, opts = {}) {
+      const res = await fetch(path, { ...opts, headers: { "Content-Type": "application/json", Authorization: `Bearer ${pw}`, ...(opts.headers || {}) } });
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) { logout(); throw new Error("Wrong password."); }
+      if (!res.ok) throw new Error(data.error || "That didn't work.");
+      return data;
+    }
+
+    function logout() {
+      pw = "";
+      try { sessionStorage.removeItem("kn-pw"); } catch {}
+      $("#diary").hidden = true; $("#login").hidden = false; $("#logout").hidden = true;
+    }
+
+    async function load() {
+      const [{ bookings }, { blocks }] = await Promise.all([api("/api/admin/bookings"), api("/api/admin/blocks")]);
+      $("#login").hidden = true; $("#diary").hidden = false; $("#logout").hidden = false;
+
+      const byDay = {};
+      for (const b of bookings) (byDay[b.date] ??= []).push(b);
+      $("#bookings").innerHTML = Object.keys(byDay).length ? Object.entries(byDay).map(([d, list]) => `
+        <div class="day-group"><h3>${fmtDay(d)}</h3>${list.map((b) => `
+          <div class="appt ${b.status}">
+            <span class="t">${b.start}</span>
+            <div><strong>${esc(b.name)}</strong>, ${esc(b.serviceName)} (${esc(b.price)})
+              <small><a href="tel:${esc(b.phone)}">${esc(b.phone)}</a>${b.notes ? `. ${esc(b.notes)}` : ""} · until ${b.end} · Ref ${b.id}</small></div>
+            ${b.status === "confirmed" ? `<button class="linkbtn" type="button" data-cancel="${b.id}">Cancel</button>` : "<span class='muted'>Cancelled</span>"}
+          </div>`).join("")}</div>`).join("") : `<p class="muted">No bookings yet. They'll appear here as soon as someone books on the site.</p>`;
+
+      $("#blocks").innerHTML = blocks.map((b) => `<div class="appt"><span class="t">${b.start}</span><div><strong>${fmtDay(b.date)}</strong> until ${b.end}<small>${esc(b.reason)}</small></div><button class="linkbtn" type="button" data-unblock="${b.id}">Remove</button></div>`).join("");
+    }
+
+    $("#login").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      pw = e.target.pw.value;
+      try { sessionStorage.setItem("kn-pw", pw); } catch {}
+      try { await load(); } catch (err) { $("#login-error").textContent = err.message; }
+    });
+    $("#logout").addEventListener("click", logout);
+
+    document.addEventListener("click", async (e) => {
+      const c = e.target.dataset?.cancel, u = e.target.dataset?.unblock;
+      if (c) {
+        if (!confirm("Cancel this booking? Let the client know yourself; the site doesn't message them.")) return;
+        await api(`/api/admin/bookings/${c}/cancel`, { method: "POST" });
+        load();
+      }
+      if (u) { await api(`/api/admin/blocks/${u}`, { method: "DELETE" }); load(); }
+    });
+
+    $("#block-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      $("#block-error").textContent = "";
+      const f = Object.fromEntries(new FormData(e.target));
+      try { await api("/api/admin/blocks", { method: "POST", body: JSON.stringify(f) }); load(); }
+      catch (err) { $("#block-error").textContent = err.message; }
+    });
+
+    if (pw) load().catch(() => {});
+  </script>
+</body>
+</html>

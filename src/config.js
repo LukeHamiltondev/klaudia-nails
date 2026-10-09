@@ -19,6 +19,8 @@ export const config = {
   root,
   port: Number(env.PORT || 3000),
   publicUrl: (env.PUBLIC_URL || `http://localhost:${env.PORT || 3000}`).replace(/\/$/, ""),
+  adminPassword: env.ADMIN_PASSWORD || "",
+  dataDir: path.resolve(root, env.DATA_DIR || "data"),
   salonFile: path.resolve(root, env.SALON_CONFIG || "config/salon.json"),
 };
 
