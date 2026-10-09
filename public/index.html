@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en-IE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{fullName}}</title>
+  <meta name="description" content="{{fullName}}. {{tagline}} Prices, recent work and booking.">
+  <meta property="og:title" content="{{fullName}}">
+  <meta property="og:description" content="{{tagline}}">
+  <meta property="og:image" content="{{publicUrl}}/images/gallery/3.jpg">
+  <meta name="theme-color" content="#faf9f6">
+  <link rel="icon" href="favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#book">Skip to booking</a>
+
+  <header class="bar">
+    <a class="bar-mark" href="#top" aria-label="{{name}}, back to top"><img src="brand/k-mark.png" alt="" width="435" height="415"></a>
+    <nav aria-label="Main">
+      <a href="#prices">Prices</a>
+      <a href="#work">Work</a>
+      <a href="#visit">Visit</a>
+      <a class="bar-book" href="{{bookingUrl}}" target="_blank" rel="noopener">Book</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="mono meta"><span>@{{handleUpper}}</span><span>Nails by Klaudia Kociubinska</span></p>
+        <h1 id="hero-title" class="display">
+          <svg class="scribble" viewBox="0 0 600 200" aria-hidden="true" focusable="false">
+            <path pathLength="1" d="M6 196 C80 132 170 72 300 8 M140 104 C290 76 460 40 584 36 C640 34 560 82 420 112 C330 132 262 146 214 152 C330 120 470 86 524 90 C566 94 440 128 384 138 C462 120 528 112 600 112"/>
+          </svg>
+          <span>nails by</span> <span>klaudia.</span>
+        </h1>
+        <p class="hero-line">{{tagline}}</p>
+        <div class="actions">
+          <a class="btn btn-dark" href="{{bookingUrl}}" target="_blank" rel="noopener">{{bookingLabel}}</a>
+          <a class="btn btn-line" href="#prices">See prices</a>
+        </div>
+      </div>
+      <figure class="hero-photo">
+        <img src="images/gallery/3.jpg" alt="Burgundy and nude nails with a tiny cherry and a burgundy French tip" width="1100" height="1080">
+        <figcaption class="mono">Cherry, burgundy French</figcaption>
+      </figure>
+    </section>
+
+    <section id="prices" class="prices" aria-labelledby="prices-title">
+      <div class="wrap">
+        <p class="mono meta"><span>@{{handleUpper}}</span><span>{{priceListDate}}</span></p>
+        <h2 id="prices-title" class="display">price list.</h2>
+        <ul class="price-list mono">{{prices}}
+        </ul>
+      </div>
+    </section>
+
+    <section id="work" class="work" aria-labelledby="work-title">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 id="work-title" class="display">recent work.</h2>
+          <a class="mono text-link" href="{{instagramUrl}}" target="_blank" rel="noopener">More on Instagram @{{handle}}</a>
+        </div>
+        <div class="gallery">{{gallery}}
+        </div>
+      </div>
+    </section>
+
+    <section id="book" class="book" aria-labelledby="book-title">
+      <div class="wrap book-inner">
+        <h2 id="book-title" class="display">book in.</h2>
+        <div>
+          <p class="book-line">{{bookingNote}}</p>
+          <a class="btn btn-light" href="{{bookingUrl}}" target="_blank" rel="noopener">{{bookingLabel}}</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="visit" class="visit" aria-labelledby="visit-title">
+      <div class="wrap visit-grid">
+        <div>
+          <h2 id="visit-title" class="display">visit.</h2>
+          <ul class="contact mono">{{contact}}</ul>
+        </div>
+        <table class="hours mono" aria-label="Opening hours"><tbody>{{hours}}</tbody></table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot-inner">
+      <img src="brand/k-mark.png" alt="" width="435" height="415">
+      <p class="mono">{{fullName}} &middot; {{year}}</p>
+      <a class="mono" href="{{instagramUrl}}" target="_blank" rel="noopener">Instagram</a>
+    </div>
+  </footer>
+</body>
+</html>

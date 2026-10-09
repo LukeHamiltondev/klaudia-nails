@@ -1,0 +1,13 @@
+# One-click deploy on Render (render.com): New > Blueprint > pick this repo.
+# No database or disk: everything lives in config/salon.json, so the free plan is enough.
+services:
+  - type: web
+    name: klaudia-nails
+    runtime: node
+    plan: free
+    buildCommand: npm ci --omit=dev || npm install --omit=dev
+    startCommand: npm start
+    healthCheckPath: /api/salon
+    envVars:
+      - key: PUBLIC_URL
+        sync: false

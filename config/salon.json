@@ -1,0 +1,39 @@
+{
+  "_note": "Edit this file to change prices, hours and contact details; the site reads it on every page load, no restart needed. Anything starting with PLACEHOLDER needs Klaudia's real details and shows as 'to confirm' on the site until then.",
+  "name": "Nails by Klaudia",
+  "fullName": "Nails by Klaudia Kociubinska",
+  "tagline": "Shellac, BIAB, gel extensions and hand-painted nail art.",
+  "instagramHandle": "klaudiakanails",
+  "priceListDate": "09/26",
+  "bookingUrl": "",
+  "bookingNote": "Message me on Instagram with the treatment you'd like and a few days that suit you.",
+  "address": "PLACEHOLDER studio address",
+  "mapsUrl": "",
+  "phoneDisplay": "PLACEHOLDER phone number",
+  "email": "",
+  "hours": {
+    "mon": "PLACEHOLDER",
+    "tue": "PLACEHOLDER",
+    "wed": "PLACEHOLDER",
+    "thu": "PLACEHOLDER",
+    "fri": "PLACEHOLDER",
+    "sat": "PLACEHOLDER",
+    "sun": "PLACEHOLDER"
+  },
+  "services": [
+    { "name": "Shellac", "price": "€30", "description": "Gel polish on your natural nails." },
+    { "name": "BIAB", "price": "€35", "description": "Builder gel that strengthens your natural nails." },
+    { "name": "Gel overlay", "price": "€40-45", "description": "Hard gel over your natural nails for strength and shape." },
+    { "name": "Gel extension", "price": "from €45", "description": "Added length and shape, built in gel." },
+    { "name": "Design", "price": "from €5", "description": "Nail art, chrome, French, 3D and more, added to any set." },
+    { "name": "Nail fix", "price": "€5", "description": "Repair a broken or lifted nail." }
+  ],
+  "gallery": [
+    { "src": "images/gallery/1.jpg", "alt": "Short oval nails in pale blue gel with a chrome silver outline" },
+    { "src": "images/gallery/2.jpg", "alt": "Almond nails with pastel French tips, gold swirls, 3D flowers and a pearl sun" },
+    { "src": "images/gallery/3.jpg", "alt": "Burgundy and nude nails with a tiny cherry and a burgundy French tip" },
+    { "src": "images/gallery/4.jpg", "alt": "Short sheer pink nails with a soft gold shimmer" },
+    { "src": "images/gallery/5.jpg", "alt": "Long almond extensions with pressed flowers and pink speckles" },
+    { "src": "images/gallery/6.jpg", "alt": "Square milky pink nails with iridescent flakes" }
+  ]
+}
