@@ -1,3 +1,5 @@
+import { describeTime } from "./time.js";
+
 const DAYS = [["mon", "Monday"], ["tue", "Tuesday"], ["wed", "Wednesday"], ["thu", "Thursday"], ["fri", "Friday"], ["sat", "Saturday"], ["sun", "Sunday"]];
 
 export const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -8,11 +10,6 @@ const todo = (label) => `<span class="todo">${esc(label)} to confirm</span>`;
 
 function instagramUrl(s) {
   return `https://www.instagram.com/${encodeURIComponent(s.instagramHandle)}/`;
-}
-
-// Booking is by Instagram message unless a booking page is set in salon.json.
-function bookingUrl(s) {
-  return s.bookingUrl || `https://ig.me/m/${encodeURIComponent(s.instagramHandle)}`;
 }
 
 function prices(s) {
@@ -35,7 +32,7 @@ function gallery(s) {
 function hours(s) {
   return DAYS.map(([k, name]) => {
     const h = s.hours?.[k];
-    const value = isPlaceholder(h) ? `<span class="muted">to confirm</span>` : esc(h);
+    const value = h ? `${describeTime(h[0])} to ${describeTime(h[1])}` : "Closed";
     return `<tr><th scope="row">${name}</th><td>${value}</td></tr>`;
   }).join("");
 }
@@ -60,8 +57,7 @@ export function renderPage(template, s, { publicUrl = "" } = {}) {
     handleUpper: esc(s.instagramHandle.toUpperCase()),
     priceListDate: esc(s.priceListDate),
     instagramUrl: esc(instagramUrl(s)),
-    bookingUrl: esc(bookingUrl(s)),
-    bookingLabel: s.bookingUrl ? "Book online" : "Book on Instagram",
+    messageUrl: esc(`https://ig.me/m/${encodeURIComponent(s.instagramHandle)}`),
     bookingNote: esc(s.bookingNote),
     publicUrl: esc(publicUrl),
     year: String(new Date().getFullYear()),
