@@ -55,3 +55,17 @@ export function describeTime(hhmm) {
   const h12 = ((h + 11) % 12) + 1;
   return `${h12}${m ? ":" + String(m).padStart(2, "0") : ""}${h < 12 ? "am" : "pm"}`;
 }
+
+// The UTC instant of a wall-clock date and time in a time zone ("2026-10-08", "10:00", "Europe/Dublin").
+export function zonedToUtc(date, hhmm, timezone) {
+  const [y, mo, d] = date.split("-").map(Number);
+  const wanted = Date.UTC(y, mo - 1, d) + toMinutes(hhmm) * 60_000;
+  let guess = wanted;
+  // Two passes settle the offset, including across a clock change.
+  for (let i = 0; i < 2; i++) {
+    const local = nowInZone(timezone, new Date(guess));
+    const [ly, lmo, ld] = local.date.split("-").map(Number);
+    guess += wanted - (Date.UTC(ly, lmo - 1, ld) + local.minutes * 60_000);
+  }
+  return new Date(guess);
+}
