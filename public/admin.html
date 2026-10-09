@@ -55,6 +55,9 @@
       </form>
       <p class="form-error" id="block-error" role="alert"></p>
       <div id="blocks"></div>
+
+      <h2 class="display">calendar.</h2>
+      <div id="calendar"></div>
     </div>
   </main>
   <script type="module">
@@ -79,7 +82,7 @@
     }
 
     async function load() {
-      const [{ bookings }, { blocks }] = await Promise.all([api("/api/admin/bookings"), api("/api/admin/blocks")]);
+      const [{ bookings }, { blocks }, cal] = await Promise.all([api("/api/admin/bookings"), api("/api/admin/blocks"), api("/api/admin/calendar")]);
       $("#login").hidden = true; $("#diary").hidden = false; $("#logout").hidden = false;
 
       const byDay = {};
@@ -94,6 +97,12 @@
               <small><a href="tel:${esc(b.phone)}">${esc(b.phone)}</a>${b.notes ? `. ${esc(b.notes)}` : ""} · until ${b.end}${depositNote(b)} · Ref ${b.id}</small></div>
             ${b.status === "pending" ? "<span class='muted'>Held</span>" : b.status === "confirmed" ? `<button class="linkbtn" type="button" data-cancel="${b.id}">Cancel</button>` : "<span class='muted'>Cancelled</span>"}
           </div>`).join("")}</div>`).join("") : `<p class="muted">No bookings yet. They'll appear here as soon as someone books on the site.</p>`;
+
+      $("#calendar").innerHTML = cal.url ? `
+        <p style="max-width:60ch;margin-bottom:16px">Open this page on your iPhone and tap the button to see every booking in Apple Calendar. New bookings appear the next time your iPhone refreshes the calendar, usually within the hour. Keep the link to yourself: anyone with it can see your bookings.</p>
+        <a class="btn btn-dark" href="${esc(cal.url)}">Add to Apple Calendar</a>
+        <p class="muted" style="margin-top:12px;font-size:13px">On a Mac: Calendar &gt; File &gt; New Calendar Subscription, then paste <span style="word-break:break-all">${esc(cal.url)}</span></p>`
+        : `<p class="muted">The calendar link is off. Set CALENDAR_TOKEN on the host to turn it on.</p>`;
 
       $("#blocks").innerHTML = blocks.map((b) => `<div class="appt"><span class="t">${b.start}</span><div><strong>${fmtDay(b.date)}</strong> until ${b.end}<small>${esc(b.reason)}</small></div><button class="linkbtn" type="button" data-unblock="${b.id}">Remove</button></div>`).join("");
     }

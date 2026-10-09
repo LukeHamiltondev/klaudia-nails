@@ -24,6 +24,8 @@ export const config = {
   dataDir: path.resolve(root, env.DATA_DIR || env.RAILWAY_VOLUME_MOUNT_PATH || "data"),
   // Stripe deposit: off until STRIPE_SECRET_KEY is set.
   stripe: { secretKey: env.STRIPE_SECRET_KEY || "", webhookSecret: env.STRIPE_WEBHOOK_SECRET || "" },
+  // Secret part of the Apple Calendar feed URL. No token, no feed.
+  calendarToken: env.CALENDAR_TOKEN || "",
   salonFile: path.resolve(root, env.SALON_CONFIG || "config/salon.json"),
 };
 

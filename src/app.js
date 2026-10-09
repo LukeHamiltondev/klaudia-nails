@@ -6,6 +6,7 @@ import { BookingService, BookingError } from "./bookings.js";
 import { Store } from "./store.js";
 import { renderPage } from "./render.js";
 import { makeStripe, verifyWebhook } from "./stripe.js";
+import { bookingsCalendar } from "./calendar.js";
 import { describeDate, describeTime, isValidDate, isValidTime, toMinutes } from "./time.js";
 
 const MIME = {
@@ -69,12 +70,14 @@ export function createApp({ config, loadSalon, log = console, clock = () => new 
     return hits.length > max;
   }
 
-  function isAdmin(req) {
-    const given = (req.headers.authorization || "").replace(/^Bearer /, "");
-    if (!config.adminPassword || !given) return false;
-    const a = crypto.createHash("sha256").update(given).digest(), b = crypto.createHash("sha256").update(config.adminPassword).digest();
+  // Constant-time comparison of a secret someone sent with the real one. An unset secret never matches.
+  function sameSecret(given, secret) {
+    if (!secret || !given) return false;
+    const a = crypto.createHash("sha256").update(given).digest(), b = crypto.createHash("sha256").update(secret).digest();
     return crypto.timingSafeEqual(a, b);
   }
+
+  const isAdmin = (req) => sameSecret((req.headers.authorization || "").replace(/^Bearer /, ""), config.adminPassword);
 
   function publicSalon() {
     const s = loadSalon();
@@ -165,6 +168,16 @@ export function createApp({ config, loadSalon, log = console, clock = () => new 
       return json(res, 200, { received: true });
     }
 
+    // ---- Klaudia's calendar feed: /calendar/<CALENDAR_TOKEN>.ics ----
+    const feed = p.match(/^\/calendar\/([^/]+)\.ics$/);
+    if (feed && (req.method === "GET" || req.method === "HEAD")) {
+      if (limited(req, "calendar", 120, 60 * 60 * 1000)) return json(res, 429, { error: "Too many requests." });
+      if (!sameSecret(feed[1], config.calendarToken)) return json(res, 404, { error: "Not found." });
+      const from = new Date(clock().getTime() - 60 * 86_400_000).toISOString().slice(0, 10);
+      res.writeHead(200, { "Content-Type": "text/calendar; charset=utf-8", "Cache-Control": "no-store" });
+      return res.end(req.method === "HEAD" ? undefined : bookingsCalendar(store.listBookings({ from }), loadSalon(), clock()));
+    }
+
     // ---- Klaudia's diary API ----
     if (p.startsWith("/api/admin/")) {
       if (limited(req, "admin", 300, 15 * 60 * 1000)) return json(res, 429, { error: "Too many attempts. Wait a few minutes." });
@@ -178,6 +191,11 @@ export function createApp({ config, loadSalon, log = console, clock = () => new 
         const b = store.cancelBooking(cancel[1], "owner");
         if (!b) return json(res, 404, { error: "No confirmed booking with that reference." });
         return json(res, 200, { booking: b });
+      }
+      if (p === "/api/admin/calendar" && req.method === "GET") {
+        if (!config.calendarToken) return json(res, 200, { url: null });
+        const host = config.publicUrl.replace(/^https?:\/\//, "");
+        return json(res, 200, { url: `webcal://${host}/calendar/${encodeURIComponent(config.calendarToken)}.ics` });
       }
       if (p === "/api/admin/blocks" && req.method === "GET") return json(res, 200, { blocks: store.listBlocks({ from: bookings.today() }) });
       if (p === "/api/admin/blocks" && req.method === "POST") {

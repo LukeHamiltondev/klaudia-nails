@@ -11,6 +11,7 @@ Website and online booking for Nails by Klaudia Kociubinska ([@klaudiakanails](h
 - **Page** (`public/index.html`, `public/styles.css`): one HTML template, filled in on the server from `config/salon.json`, so prices and details are in the page itself (good for Google and link previews).
 - **Booking** (`public/app.js`, `src/bookings.js`, `src/store.js`): pick a treatment, a day, a free time and add a name and mobile. One diary, so no double booking. Stored in `data/bookings.json`.
 - **Deposit** (`src/stripe.js`): with Stripe set up, booking ends on Stripe's own payment page for a €10 deposit (`deposit` in `config/salon.json`). The time is held for 35 minutes while the client pays and confirmed as soon as Stripe says it's paid, either on the way back to the site or by Stripe's webhook, whichever comes first. If the client backs out, the time is freed. Without Stripe keys, bookings confirm straight away as before.
+- **Apple Calendar** (`src/calendar.js`): a private, read-only calendar feed of her confirmed bookings at `/calendar/<CALENDAR_TOKEN>.ics`. She subscribes once from the diary on her iPhone ("Add to Apple Calendar"); cancelled bookings drop off on the next refresh.
 - **Klaudia's diary** (`/admin`, "Sign in" in the footer): password sign-in, upcoming bookings, cancel, block out breaks or days off. The site sends no texts or emails, so she lets clients know about a cancellation herself.
 - **Look**: off-white paper, black heavy lowercase headings in Inter Tight, mono labels in JetBrains Mono and a burgundy scribble, taken from the logo and the 09/26 Instagram price list.
 
@@ -19,7 +20,7 @@ Website and online booking for Nails by Klaudia Kociubinska ([@klaudiakanails](h
 ```bash
 cp .env.example .env   # optional
 npm start              # http://localhost:3000, diary at http://localhost:3000/admin
-npm test               # 21 tests: diary rules, booking API, deposit flow with a fake Stripe, sign-in, page content
+npm test               # 25 tests: diary rules, booking API, deposit flow with a fake Stripe, calendar feed, sign-in, page content
 ```
 
 ## Change prices, hours or details
@@ -39,6 +40,7 @@ The six photos are in `public/images/gallery/` as `1.jpg` to `6.jpg`, each with 
 3. Under **Variables**, add `ADMIN_PASSWORD`. The diary stays locked without it.
 4. Under **Settings > Networking**, generate a domain.
 5. For the deposit, add `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` (see below).
+6. For Apple Calendar, add `CALENDAR_TOKEN`: a long random string (for example from `openssl rand -hex 24`). It's the secret part of her calendar link; change it to revoke the link.
 
 ### Stripe deposit
 
